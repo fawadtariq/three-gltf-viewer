@@ -103,6 +103,7 @@ export class Viewer {
     this.renderer.setClearColor( 0xcccccc );
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setSize( el.clientWidth, el.clientHeight );
+    this.renderer.shadowMap.enabled = true; 
 
     this.pmremGenerator = new PMREMGenerator( this.renderer );
     this.pmremGenerator.compileEquirectangularShader();
@@ -231,13 +232,21 @@ export class Viewer {
           );
         }
 
+        scene.traverse(n => {
+          if (n.isLight) {
+            n.castShadow = true;
+          }
+          if (n.isObject3D){
+            n.receiveShadow = true;
+          }
+        })
+
         this.setContent(scene, clips);
 
         blobURLs.forEach(URL.revokeObjectURL);
 
         // See: https://github.com/google/draco/issues/349
         // DRACOLoader.releaseDecoderModule();
-
         resolve(gltf);
 
       }, undefined, reject);
@@ -293,8 +302,16 @@ export class Viewer {
     this.axesCorner.scale.set(size, size, size);
 
     this.controls.saveState();
-
+    
     this.scene.add(object);
+    this.scene.traverse(n => {
+      if (n.isLight) {
+        n.castShadow = true;
+      }
+      if (n.isObject3D){
+        n.receiveShadow = true;
+      }
+    })
     this.content = object;
 
     this.state.addLights = true;
